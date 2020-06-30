@@ -14,6 +14,7 @@ public class GolemStatus : StatusInterface
     GameObject rock;
     GameObject elect;
     ObjectPoller poller;
+    EventHandler eh;
 
     public bool isWin
     {
@@ -29,7 +30,7 @@ public class GolemStatus : StatusInterface
     {
         get
         {
-            if(HP <= 0.0f)
+            if (HP <= 0.0f)
                 at_body.SetBool("isDie", true);
             return HP > 0.0f;
         }
@@ -53,7 +54,7 @@ public class GolemStatus : StatusInterface
         skillChargeTime[num] = 0.0f;
         IsSkillCoolTime[num] = true;
         IsAttack = true;
-        at_body.SetInteger("Attack", num+1);
+        at_body.SetInteger("Attack", num + 1);
     }
 
     void SkillUsed()
@@ -63,7 +64,33 @@ public class GolemStatus : StatusInterface
         at_body.SetInteger("Attack", 0);
     }
 
+    public bool rest
+    {
+        set 
+        {
+            if (value)
+            {
+                if(target.GetComponent<PlayerControler>().CheckAdaptSlowmotion)
+                    eh.Emit("slowGameSpeed");
+                if(!at_body.GetBool("isRest"))
+                    eh.Emit("skillReset");
+            }
+            else
+            {
+                eh.Emit("UserSkillLock");
+                eh.Emit("normalGameSpeed");
+            }
+            at_body.SetBool("isRest", value);
+        }  
+    }
 
+    public bool isChance
+    {
+        get
+        {
+            return at_body.GetBool("isRest");
+        }
+    }
 
     void resetSkill()
     {
@@ -158,6 +185,7 @@ public class GolemStatus : StatusInterface
     // Start is called before the first frame update
     void Start()
     {
+        eh = GameObject.Find("StageEventHandler").GetComponent<EventHandler>();
         at_body = GetComponent<Animator>();
         resetSkill();
         IsAttack = false;

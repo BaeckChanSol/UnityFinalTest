@@ -10,8 +10,31 @@ public class PlayerStatus : StatusInterface
     ObjectPoller pollor;
     [SerializeField] private float StRecoverySpeed = 50.0f;
     [SerializeField] private float StRunUseSpeed = 75.0f;
-
+    SkillManager skillManager;
+    bool[] SkillUse;
     bool DamageTo = false;
+
+    public void skillReset(int index)
+    {
+        if (SkillUse.Length <= index-1)
+            return;
+        SkillUse[index-1] = true;
+        skillManager.UnLock(index);
+    }
+
+    public void skillCoolTime(int index)
+    {
+        if (SkillUse.Length <= index-1)
+            return;
+        SkillUse[index-1] = false;
+        print(SkillUse[0]);
+        skillManager.Lock(index);
+    }
+
+    public bool[] skilluse
+    {
+        get { return SkillUse; }
+    }
 
     public bool isAlive
     {
@@ -181,10 +204,13 @@ public class PlayerStatus : StatusInterface
     // Start is called before the first frame update
     void Start()
     {
+        skillManager = GameObject.Find("SkillUI").GetComponent<SkillManager>();
         pc = GameObject.Find("Player").GetComponent<PlayerControler>();
         at_body = GameObject.Find("Body").GetComponent<Animator>();
         pollor = GameObject.Find("ObjectPoller").GetComponent<ObjectPoller>();
-
+        SkillUse = new bool[3];
+        for (int i = 0; i < 3; i++)
+            SkillUse[i] = false;
     }
 
     // Update is called once per frame

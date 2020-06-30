@@ -35,12 +35,18 @@ public class GolemController : MonoBehaviour
  
     void Rest()
     {
-        if(restTime)
+        if (restTime)
         {
+            Gs.rest = true;
             Gs.StaminaPoint = 100 * Time.deltaTime;
             if (Gs.isFullSP)
+            {
+                Gs.rest = false;
                 restTime = false;
+            }
         }
+
+    
     }
 
     bool restTime = false;

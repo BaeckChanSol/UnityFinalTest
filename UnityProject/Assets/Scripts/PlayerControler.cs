@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
-
+using System.Diagnostics;
 using TMPro;
 using UnityEngine;
 
@@ -41,15 +41,26 @@ public class PlayerControler : MonoBehaviour
     private Vector3 RayGoto;
     private PlayerStatus pStatus;
     private ObjectPoller poller;
-    private Rigidbody rigid;
- 
+    private SkillManager skillManager;
+    private GolemStatus gs;
+    private EventHandler eh;
+
+
+    Dictionary<string, bool> keyDictionary;
     void Start()
     {
-
-
+        keyDictionary = new Dictionary<string, bool>
+        {
+            { "Space", false},
+            { "LeftShift", false },
+            { "Q", false},
+            { "LMouse", false},
+            { "RMouse", false},
+        };
 
         tr = GetComponent<Transform>();
-
+        eh = GameObject.Find("StageEventHandler").GetComponent<EventHandler>();
+        gs = GameObject.Find("PBR_Golem").GetComponent<GolemStatus>();
         tr_body = GameObject.Find("Body").GetComponent<Transform>();
         pStatus = GameObject.Find("Body").GetComponent<PlayerStatus>();
         tr_Cam = GameObject.Find("Main Camera").GetComponent<Transform>();
@@ -57,15 +68,35 @@ public class PlayerControler : MonoBehaviour
         LookForward = Vector3.forward;
         CharacterGoto = Vector3.forward;
         poller = GameObject.Find("ObjectPoller").GetComponent<ObjectPoller>();
-        rigid = GetComponent<Rigidbody>();
+        skillManager = GameObject.Find("SkillUI").GetComponent<SkillManager>();
     }
+
+
+    private void Update()
+    {
+        h = Input.GetAxis("Horizontal");
+        v = Input.GetAxis("Vertical");
+        x = Input.GetAxis("Mouse X");
+        y = Input.GetAxis("Mouse Y");
+
+        if (Input.GetMouseButton(1))
+            keyDictionary["RMouse"] = true;
+        if (Input.GetKeyDown(KeyCode.Space))
+            keyDictionary["Space"] = true;
+        if(Input.GetMouseButtonDown(0))
+            keyDictionary["LMouse"] = true;
+        if (Input.GetKey(KeyCode.LeftShift))
+            keyDictionary["LeftShift"] = true;
+        if(Input.GetKeyDown(KeyCode.Q))
+            keyDictionary["Q"] = true;
+    }
+
 
     bool CanMove = true;
     [SerializeField] float rayDistance = 0.5f;
 
     void RayCheck()
     {
-        Debug.DrawRay(transform.position + new Vector3(0, 0.9f, 0), RayGoto.normalized * rayDistance, Color.red);
         if (Physics.Raycast(transform.position + new Vector3(0,0.9f,0), RayGoto.normalized, rayDistance))
         {
             CanMove = false;
@@ -78,8 +109,13 @@ public class PlayerControler : MonoBehaviour
 
     void Guard()
     {
+        if (skillManager.isShowUI())
+        {
+            keyDictionary["RMouse"] = false;
+            return;
+        }
 
-        if (Input.GetMouseButton(1) && pStatus.isRolling == false && pStatus.isAttack == false && pStatus.StaminaPoint >= 200)
+        if (keyDictionary["RMouse"] && pStatus.isRolling == false && pStatus.isAttack == false && pStatus.StaminaPoint >= 200)
         {
             if (!pStatus.isGuard)
             {
@@ -95,33 +131,67 @@ public class PlayerControler : MonoBehaviour
             pStatus.isGuard = false;
             poller.Delete("Shield");
         }
-  
+        keyDictionary["RMouse"] = false;
 
     }
     void Roll()
     {
-        if (Input.GetKeyDown(KeyCode.Space)&& pStatus.StaminaPoint >= 200 && (h != 0 || v != 0) && pStatus.isGuard == false && pStatus.isRolling == false)
+        if (skillManager.isShowUI())
+        {
+            keyDictionary["Space"] = false;
+            return;
+        }
+
+        if (keyDictionary["Space"] && pStatus.StaminaPoint >= 200 && (h != 0 || v != 0) && pStatus.isGuard == false && pStatus.isRolling == false)
         {
             pStatus.isRolling = true;
             pStatus.StaminaPoint = -200;
         }
+        keyDictionary["Space"] = false;
         if (pStatus.isRolling == true)
         {
             if(CanMove)
                 tr.Translate(CharacterGoto.normalized * pStatus.moveSpeed * rollingMoveCorrection * Accel * Time.deltaTime);
         }
+
     }
     void Attack()
     {
-        if (Input.GetMouseButtonDown(0) && pStatus.isGuard == false && pStatus.isRolling == false)
+        if (skillManager.isShowUI())
         {
-            pStatus.isAttack = true;
+            if (keyDictionary["LMouse"] && pStatus.isGuard == false && pStatus.isRolling == false)
+            {
+                switch(skillManager.getSelectedIndex())
+                {
+                    case 1:
+                        if(pStatus.skilluse[1])
+                        {
+                            poller.Spawn("RotatorPS1", transform.position);
+                            eh.Emit("UserSkillLock");
+                        }
+                        break;
+                    case 2:
+                        break;
+                    case 3:
+                        break;
+                }
+                skillManager.OffUI();
+                eh.Emit("normalGameSpeed");
+            }
         }
-        if (pStatus.doAttackMove == true)
+        else
         {
-            if(CanMove)
-                tr.Translate(CharacterGoto.normalized * pStatus.moveSpeed * attackMoveCorrection * Time.deltaTime);
+            if (keyDictionary["LMouse"] && pStatus.isGuard == false && pStatus.isRolling == false)
+            {
+                pStatus.isAttack = true;
+            }
+            if (pStatus.doAttackMove == true)
+            {
+                if (CanMove)
+                    tr.Translate(CharacterGoto.normalized * pStatus.moveSpeed * attackMoveCorrection * Time.deltaTime);
+            }
         }
+        keyDictionary["LMouse"] = false;
 
     }
     void Move()
@@ -142,6 +212,9 @@ public class PlayerControler : MonoBehaviour
     }
     void CamMove()
     {
+        if (skillManager.isShowUI())
+            return;
+
         if (x != 0 && pStatus.isGuard == false)
         {
             transform.Rotate(Vector3.up * SensitiveX * x);
@@ -180,7 +253,7 @@ public class PlayerControler : MonoBehaviour
         if (ShiftDrained && pStatus.StaminaPoint >= StaminaHurdles)
             ShiftDrained = false;
 
-        if (Input.GetKey(KeyCode.LeftShift) && pStatus.isAttack == false && pStatus.isGuard == false && pStatus.StaminaPoint > 0 && !ShiftDrained)
+        if (keyDictionary["LeftShift"] && pStatus.isAttack == false && pStatus.isGuard == false && pStatus.StaminaPoint > 0 && !ShiftDrained)
         {
             pStatus.isRun = true;
             Accel = (pStatus.runSpeed) / (pStatus.moveSpeed);
@@ -192,24 +265,45 @@ public class PlayerControler : MonoBehaviour
             if(pStatus.StaminaPoint <= 0)
                 ShiftDrained = true;
         }
+        keyDictionary["LeftShift"] = false;
+    }
+    
+    public bool CheckAdaptSlowmotion
+    {
+        get { return skillManager.isShowUI(); }
     }
 
     void skill()
     {
-        if(Input.GetKeyDown(KeyCode.Q) && !poller.isSpawned("RotatorPS1"))
+        if (pStatus.isAttack || pStatus.isGuard || pStatus.isRolling)
         {
-            poller.Spawn("RotatorPS1", transform.position);
+            keyDictionary["Q"] = false;
+            return;
         }
+
+        if (keyDictionary["Q"])
+        {
+            if (skillManager.isShowUI())
+            {
+                eh.Emit("normalGameSpeed");
+                skillManager.OffUI();
+            }
+            else
+            {
+                if (gs.isChance)
+                    eh.Emit("slowGameSpeed");
+                skillManager.OnUI(pStatus.skilluse);
+            }
+        }
+        keyDictionary["Q"] = false;
+
+
     }
 
     // Update is called once per frame
     void FixedUpdate()
     {
-  
-        h = Input.GetAxis("Horizontal");
-        v = Input.GetAxis("Vertical");
-        x = Input.GetAxis("Mouse X");
-        y = Input.GetAxis("Mouse Y");
+ 
 
         if (pStatus.isAlive)
         {

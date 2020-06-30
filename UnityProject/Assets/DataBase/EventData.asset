@@ -23,3 +23,15 @@ MonoBehaviour:
   - eventID: restart
     eventName: "\uAC8C\uC784 \uC7AC\uC2DC\uC791"
     eventDescription: "\uC52C\uC744 \uBD88\uB7EC \uAC8C\uC784\uC744 \uC7AC\uC2DC\uC791\uD569\uB2C8\uB2E4."
+  - eventID: skillReset
+    eventName: "\uC720\uC800 \uC2A4\uD0AC \uB9AC\uC14B"
+    eventDescription: "\uC720\uC800 \uC2A4\uD0AC \uC0AC\uC6A9 \uAC00\uB2A5\uC73C\uB85C
+      \uCD08\uAE30\uD654 \uD569\uB2C8\uB2E4."
+  - eventID: removeCursor
+    eventName: "\uCEE4\uC11C \uC81C\uAC70"
+    eventDescription: "\uAC8C\uC784 \uC2DC\uC791\uD558\uBA74 \uCEE4\uC11C \uC548
+      \uBCF4\uC774\uB3C4\uB85D \uC124\uC815"
+  - eventID: UserSkillLock
+    eventName: "\uC720\uC800 \uC2A4\uD0AC \uB77D"
+    eventDescription: "\uC720\uC800 \uC2A4\uD0AC \uC0AC\uC6A9 \uBD88\uAC00\uB2A5\uC73C\uB85C
+      \uCD08\uAE30\uD654 \uD569\uB2C8\uB2E4"
