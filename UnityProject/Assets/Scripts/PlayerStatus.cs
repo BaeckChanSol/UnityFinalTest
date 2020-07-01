@@ -294,6 +294,18 @@ public class PlayerStatus : StatusInterface
         }
     }
 
+    public bool HealthDanger
+    {
+        get
+        {
+            if (HP / mHP <= 0.2f)
+                return true;
+            else
+                return false;
+        }
+    }
+
+
     IEnumerator statminaRecovery()
     {
         if(!isGuard)
