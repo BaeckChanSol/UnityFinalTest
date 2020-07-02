@@ -31,7 +31,11 @@ public class GolemStatus : StatusInterface
         get
         {
             if (HP <= 0.0f)
+            {
                 at_body.SetBool("isDie", true);
+                if(!poller.isSpawned("ResultUI"))
+                    poller.Spawn("ResultUI",Vector3.zero).GetComponent<ResultPrint>().setWin();
+            }
             return HP > 0.0f;
         }
     }

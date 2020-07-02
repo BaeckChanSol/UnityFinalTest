@@ -56,13 +56,13 @@ public class SkillManager : MonoBehaviour
 
     public void UnLock(int index)
     {
-        if (Image.ContainsKey("SkillImage" + index))
+        if (Image.ContainsKey("SkillImage" + index) && Image["BaseUI"].activeSelf)
             Image["Locked" + index].SetActive(false);
     }
 
     public void Lock(int index)
     {
-        if (Image.ContainsKey("SkillImage" + index))
+        if (Image.ContainsKey("SkillImage" + index) && Image["BaseUI"].activeSelf)
             Image["Locked" + index].SetActive(true);
     }
 

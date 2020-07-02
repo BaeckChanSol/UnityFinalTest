@@ -41,7 +41,11 @@ public class PlayerStatus : StatusInterface
         get
         {
             if (HP <= 0.0f)
+            {
                 at_body.SetBool("isDie", true);
+                if (!pollor.isSpawned("ResultUI"))
+                    pollor.Spawn("ResultUI", Vector3.zero).GetComponent<ResultPrint>().setLose();
+            }
             return HP > 0.0f;
         }
     }
